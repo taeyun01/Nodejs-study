@@ -8,5 +8,8 @@
     "start": "node app"
   },
   "author": "taeyun",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "underscore": "^1.12.1"
+  }
 }
