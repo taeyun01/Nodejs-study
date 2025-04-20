@@ -33,25 +33,50 @@ fs.promises
 
 function processFiles(files) {
   files.forEach((file) => {
-    console.log(file);
+    // console.log(file);
     if (isVideoFile(file)) {
-      console.log("video", file);
+      // console.log("video: ", file);
+      move(file, videoDir);
     } else if (isCapturedFile(file)) {
-      console.log("captured", file);
-    } else if (isDuplicatedFile(file)) {
-      console.log("duplicated", file);
+      // console.log("captured: ", file);
+      move(file, capturedDir);
+    } else if (isDuplicatedFile(files, file)) {
+      // console.log("duplicated: ", file);
+      move(file, duplicatedDir);
     }
   });
 }
 
+// 파일이 mp4|mov 확장자를 가지고 있는지 확인
 function isVideoFile(file) {
-  return true;
+  const regExp = /(mp4|mov)$/gm;
+  const match = file.match(regExp);
+  return !!match; // match ? true : false 랑 동일
 }
 
+// 파일이 png|aae 확장자를 가지고 있는지 확인
 function isCapturedFile(file) {
-  return true;
+  const regExp = /(png|aae)$/gm;
+  const match = file.match(regExp);
+  return !!match;
 }
 
-function isDuplicatedFile(file) {
-  return true;
+// 파일이 IMG로 시작하는 동일한 이름에서 IMG_XXXX에서 IMG_EXXX으로 수정된 파일이 있는지 확인
+function isDuplicatedFile(files, file) {
+  // IMG_로 시작하지 않는 파일이거나, IMG_E로 수정된 버전 이라면 검사를 해주지 않아도됨
+  if (!file.startsWith("IMG_") || file.startsWith("IMG_E")) {
+    return false;
+  }
+
+  const edited = `IMG_E${file.split("_")[1]}`;
+  const found = files.find((f) => f.includes(edited));
+  return !!found;
+}
+
+// 파일을 옮기는 함수
+function move(file, targetDir) {
+  console.log(`${file} 파일이 ${path.basename(targetDir)} 폴더로 이동합니다.`);
+  const oldPath = path.join(workingDir, file);
+  const newPath = path.join(targetDir, file);
+  fs.promises.rename(oldPath, newPath).catch(console.error);
 }
