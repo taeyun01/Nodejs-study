@@ -32,31 +32,28 @@ app.get("/file1", (req, res, next) => {
 });
 
 //* 비동기 처리 (프로미스를 하게 되면 콜백함수를 전달해줘야함)
-// app.get("/file2", (req, res) => {
-//   fsAsync
-//     .readFile("./file2.txt") //
-//     .then((data) => res.send(data))
-//     .catch((err) => res.sendStatus(404));
-// });
-//* 위처럼 프로미스로 catch를 하지 않는 경우에는 서버가 죽을수도 있는데 안전망을 추가 할 수 있을까?
-//* express5버전 부터 프로미스 에러 캐치 동작이 추가됨
-app.get("/file2", async (req, res) => {
-  return fsAsync
-    .readFile("./file2.txt") //
-    .then((data) => res.send(data));
+app.get("/file2", (req, res, next) => {
+  fsAsync
+    .readFile("./file2.txt")
+    .then((data) => {
+      res.send(data);
+    })
+    .catch((err) => {
+      res.sendStatus(404);
+    });
 });
 
 //
-app.get("/file3", async (req, res) => {
+app.get("/file3", async (req, res, next) => {
   try {
-    const data = await fsAsync.readFile("./file2.txt");
+    const data = await fsAsync.readFile("./file3.txt");
     res.send(data);
   } catch (err) {
     res.sendStatus(404);
   }
 });
 
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ message: "서버 에러" });
 });
