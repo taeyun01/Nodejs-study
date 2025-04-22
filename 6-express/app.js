@@ -1,64 +1,52 @@
 import express from "express";
-import fs from "fs";
-import fsAsync from "fs/promises";
+import postRouter from "./router/post.js";
+import userRouter from "./router/user.js";
 
 const app = express();
 
 app.use(express.json());
 
-//* 비동기 처리
-app.get("/file", (req, res, next) => {
-  fs.readFile("./file.txt", "utf-8", (err, data) => {
-    // 에러처리
-    if (err) {
-      return res.sendStatus(404);
-    }
-  });
-});
+//* 3. use를 사용하여 상위 경로를 묶어서 처리 (Best)
+app.use("/posts", postRouter);
+app.use("/users", userRouter);
 
-//* 동기 처리
-app.get("/file1", (req, res, next) => {
-  //* 서버에서 동기적인 처리는 좋지 않지만 이렇게 했을 때의 문제점은 use에러로 에러 처리를 해도 사용자에게 에러 메세지를 적절하게 보내지 못한다.
-  // const data = fs.readFileSync("./file.txt");
-  // res.send(data);
+//* 2. 중복되는 경로를 줄이기 위해서 route 사용
+//*    하지만 이것도 길어지면 유지보수도 어렵고 가독성도 좋지 않음
+// app
+//   .route("/posts")
+//   .get((req, res) => {
+//     res.status(201).send("GET: /posts");
+//   })
+//   .post((req, res) => {
+//     res.status(201).send("POST: /posts");
+//   });
 
-  //* 사용자가 요청한 데이터가 존재하지 않으므로 위 처럼 작성하는 것보다는 try로 처리하는 것이 좋다.
-  try {
-    const data = fs.readFileSync("./file.txt");
-    res.send(data);
-  } catch (err) {
-    res.sendStatus(404); //* 사용자에게 404 에러 메세지를 보내주어 요청한 파일이 없구나를 인지 시킨다.
-  }
-});
+// app
+//   .route("/posts/:id")
+//   .put((req, res) => {
+//     res.status(200).send("PUT: /posts/:id");
+//   })
+//   .delete((req, res) => {
+//     res.status(200).send("DELETE: /posts/:id");
+//   });
 
-//* 비동기 처리 (프로미스를 하게 되면 콜백함수를 전달해줘야함)
-// app.get("/file2", (req, res) => {
-//   fsAsync
-//     .readFile("./file2.txt") //
-//     .then((data) => res.send(data))
-//     .catch((err) => res.sendStatus(404));
+//* 1. 기존 경로 처리 방식
+// app.get("/posts", (req, res) => {
+//   res.status(201).send("GET: /posts");
 // });
-//* 위처럼 프로미스로 catch를 하지 않는 경우에는 서버가 죽을수도 있는데 안전망을 추가 할 수 있을까?
-//* express5버전 부터 프로미스 에러 캐치 동작이 추가됨
-app.get("/file2", async (req, res) => {
-  return fsAsync
-    .readFile("./file2.txt") //
-    .then((data) => res.send(data));
-});
 
-//
-app.get("/file3", async (req, res) => {
-  try {
-    const data = await fsAsync.readFile("./file2.txt");
-    res.send(data);
-  } catch (err) {
-    res.sendStatus(404);
-  }
-});
+// app.post("/posts", (req, res) => {
+//   res.status(201).send("POST: /posts");
+// });
 
-app.use((err, req, res) => {
-  console.error(err);
-  res.status(500).json({ message: "서버 에러" });
-});
+// app.put("/posts/:id", (req, res) => {
+//   res.status(200).send("PUT: /posts");
+// });
 
-app.listen(8080);
+// app.delete("/posts/:id", (req, res) => {
+//   res.status(200).send("DELETE: /posts");
+// });
+
+app.listen(8080, () => {
+  console.log("Server is running on port 8080");
+});
